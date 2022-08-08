@@ -1,0 +1,51 @@
+db.recruitmentinfo.aggregate(
+    [
+        { $group: {
+            _id: {'company_id':'$company_id', 'company_name':'$company_name'},
+            'slDangTuyen':{
+              $sum : "$quantity"
+            },
+            'slLienQuanDMS': { 
+                '$sum': {
+                    '$cond': [
+                        { '$eq': ['$is_dms', "DMS"]}, 
+                        '$quantity', 
+                        0
+                    ]
+                }
+            },
+            'slKhongLienQuanDMS': { 
+                '$sum': {
+                    '$cond': [
+                        { '$eq': ['$is_dms', "Non-DMS"]}, 
+                        '$quantity', 
+                        0
+                    ]
+                }
+            }
+        }},
+        {
+          $sort : {_id : 1}
+        },
+        {
+          $out: 'api_danhgia'
+        }
+    ]
+).pretty()
+
+db.recruitmentinfo.aggregate([
+   { 
+     $group : 
+     { _id : {company_id:"$company_id", company_name: "$company_name"},
+     listNganhTuyenDung: { $push: {Vitri:"$vacancy", 
+     slTuyen:"$quantity", 
+     Luong:"$salary",
+     Noilamviec:"$workplace",
+     Ngaydang:"$posted_date", 
+     Ngayhethan:"$deadline_to_apply",
+     Yeucau:"$job_requirements"}}}
+   },
+   {
+     $out: 'api_chitiettuyendung'
+   }
+ ]).pretty()
